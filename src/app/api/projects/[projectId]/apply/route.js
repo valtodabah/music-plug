@@ -2,6 +2,7 @@ import connectToDatabase from "@/lib/mongodb";
 import Project from "@/models/Project";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { NextResponse } from 'next/server';
 
 export async function POST(req, { params }) {
     try {

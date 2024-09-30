@@ -1,5 +1,6 @@
 import connectToDatabase from "@/lib/mongodb";
 import Project from "@/models/Project";
+import { NextResponse } from 'next/server';
 import User from "@/models/User";
 
 export async function GET(req, { params }) {
