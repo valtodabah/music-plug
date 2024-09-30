@@ -8,7 +8,7 @@ export async function POST(req, { params }) {
         const session = await getServerSession({ req, authOptions });
 
         if (!session) {
-            return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401 });
+            return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
         }
 
         const { projectId } = params;
@@ -18,7 +18,7 @@ export async function POST(req, { params }) {
         const project = await Project.findById(params.projectId);
 
         if (!project) {
-            return new Response(JSON.stringify({ error: "Project not found" }), { status: 404 });
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
         }
 
         const applicant = {
@@ -29,9 +29,9 @@ export async function POST(req, { params }) {
         project.applicants.push(applicant);
         await project.save();
 
-        return new Response(JSON.stringify({ message: "Application submitted successfully" }), { status: 200 });
+        return NextResponse.json({ message: "Application submitted successfully" }, { status: 200 });
     } catch (error) {
         console.error("Error applying to project: ", error);
-        return new Response(JSON.stringify({ message: "Internal server error" }), { status: 500 });
+        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }

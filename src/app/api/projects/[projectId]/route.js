@@ -10,12 +10,12 @@ export async function GET(req, { params }) {
         const project = await Project.findById(params.projectId).populate("user", "name email");
 
         if (!project) {
-            return new Response(JSON.stringify({ error: "Project not found" }), { status: 404 });
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
         }
 
-        return new Response(JSON.stringify(project), { status: 200 });
+        return NextResponse.json((project), { status: 200 });
     } catch (error) {
         console.error('Error fetching project: ', error);
-        return new Response(JSON.stringify({ message: "Internal server error" }), { status: 500 });
+        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }

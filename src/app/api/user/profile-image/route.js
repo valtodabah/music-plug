@@ -14,7 +14,7 @@ export async function POST(req) {
 
         if (!session)
         {
-            return new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401 });
+            return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
         const file = await req.json();
