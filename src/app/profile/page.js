@@ -3,26 +3,78 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import axios from 'axios'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ExternalLink, Mail, Pencil } from 'lucide-react'
+import { ExternalLink, Mail, Pencil, PlusCircle } from 'lucide-react'
+import { set } from 'mongoose'
 
 export default function Profile() {
   const { data: session, status } = useSession()
+  const [user, setUser] = useState(null)
+  const [imageUrl, setImageUrl] = useState('')
+  const [imageLoaded, setImageLoaded] = useState(false)
   const [error, setError] = useState(null)
   const router = useRouter()
+  const [projects, setProjects] = useState([])
+  const [newProject, setNewProject] = useState({
+    name: '',
+    description: '',
+    tags: '',
+  })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     }
-  }, [status, router])
+    if (status === 'authenticated') {
+      const fetchUserData = async () => {
+        try {
+          const response = await axios.get('/api/user/profile', {
+            params: {
+              id: session.user.id,
+            }
+          })
 
-  if (status === 'loading') {
+          setUser(response.data)
+
+          // Preload image
+          const img = new Image()
+          img.src = response.data.profilePicture
+          img.onload = () => setImageUrl(response.data.profilePicture || '')
+        } catch (error) {
+          console.error('Error fetching user data: ', error)
+          setError(error)
+        }
+      }
+      const fetchUserProjects = async () => {
+        try {
+          const response = await axios.get('/api/projects', {
+            params: {
+              owner: session.user.id,
+            },
+          })
+          setProjects(response.data || [])
+          setLoading(false)
+        } catch (error) {
+          console.error('Error fetching projects: ', error)
+          setLoading(false)
+        }
+      }
+
+      fetchUserData()
+      fetchUserProjects()
+    }
+  }, [status, router, session])
+
+  if (status === 'loading' || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-lg">Loading...</p>
@@ -34,14 +86,46 @@ export default function Profile() {
     return null
   }
 
-  const user = session.user
+  const handleProjectChange = (e) => {
+    setNewProject({ ...newProject, [e.target.name]: e.target.value })
+  }
+
+  const handleCreateProject = async () => {
+    try {
+      const projectData = {
+        name: newProject.name,
+        description: newProject.description,
+        tags: newProject.tags,
+        owner: session.user.id, // Manually passing the user ID from the frontend
+      }
+      const response = await axios.post('/api/projects', projectData)
+      setProjects([...projects, response.data]) // Update the projects list
+      setNewProject({ name: '', description: '', tags: '' }) // Reset form fields
+    } catch (error) {
+      console.error('Error creating project: ', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading projects...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-3xl mx-auto">
         <CardHeader className="flex flex-col sm:flex-row items-center gap-4">
-          <Avatar className="w-24 h-24">
-            <AvatarImage src={user.profilePicture} alt={user.name} />
+          <Avatar className="w-20 h-20">
+            {!imageLoaded && <div className="image-placeholder">Loading...</div>}
+            <AvatarImage 
+              src={imageUrl}
+              alt={user.name}
+              onLoad={() => setImageLoaded(true)}
+              style={{ display: imageLoaded ? 'block' : 'none' }}
+            />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="text-center sm:text-left">
@@ -83,12 +167,14 @@ export default function Profile() {
             {user?.portfolio?.length > 0 ? (
               <ul className="space-y-2">
                 {user.portfolio.map((project, index) => (
-                  <li key={index}>
-                    <Link href={project.link} target="_blank" rel="noopener noreferrer" className="flex items-center text-primary hover:underline">
-                      {project.name}
-                      <ExternalLink className="w-4 h-4 ml-1" />
-                    </Link>
-                  </li>
+                  project && project.link ? (
+                    <li key={index}>
+                      <Link href={project.link} target="_blank" rel="noopener noreferrer" className="flex items-center text-primary hover:underline">
+                        {project.name}
+                        <ExternalLink className="w-4 h-4 ml-1" />
+                      </Link>
+                    </li>
+                  ) : null
                 ))}
               </ul>
             ) : (
@@ -101,17 +187,73 @@ export default function Profile() {
             {user?.socialMedia?.length > 0 ? (
               <ul className="space-y-2">
                 {user.socialMedia.map((account, index) => (
-                  <li key={index}>
-                    <Link href={account.link} target="_blank" rel="noopener noreferrer" className="flex items-center text-primary hover:underline">
-                      {account.platform}: {account.username}
-                      <ExternalLink className="w-4 h-4 ml-1" />
-                    </Link>
-                  </li>
+                  account && account.link ? (
+                    <li key={index}>
+                      {account.platform}: 
+                      <Link href={account.link} target="_blank" rel="noopener noreferrer" className="flex items-center text-primary hover:underline">
+                        {account.username}
+                        <ExternalLink className="w-4 h-4 ml-1" />
+                      </Link>
+                    </li>
+                  ) : null
                 ))}
               </ul>
             ) : (
               <p className="text-muted-foreground">No social media links added yet.</p>
             )}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="max-w-3xl mx-auto mt-4">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">My Projects</CardTitle>
+          <CardDescription>Manage your projects</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {projects.length > 0 ? (
+            projects.map((project) => (
+              <div key={project._id} className="space-y-2 p-4 border rounded-md">
+                <h3 className="text-xl font-semibold">{project.name}</h3>
+                <p>{project.description}</p>
+                <p>Status: {project.status}</p>
+                <Link href={`/project/${project._id}/edit`} className="text-primary hover:underline">
+                  Edit Project
+                </Link>
+              </div>
+            ))
+          ) : (
+            <p>No projects found.</p>
+          )}
+
+          <Separator />
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Create New Project</h2>
+            <Input
+              name="name"
+              placeholder="Project Name"
+              value={newProject.name}
+              onChange={handleProjectChange}
+              required
+            />
+            <Textarea
+              name="description"
+              placeholder="Project Description"
+              value={newProject.description}
+              onChange={handleProjectChange}
+              rows={4}
+              required
+            />
+            <Input
+              name="tags"
+              placeholder="Tags (comma-separated)"
+              value={newProject.tags}
+              onChange={handleProjectChange}
+              required
+            />
+            <Button onClick={handleCreateProject} className="w-full">
+              <PlusCircle className="w-4 h-4 mr-2" />
+              Create Project
+            </Button>
           </div>
         </CardContent>
       </Card>
