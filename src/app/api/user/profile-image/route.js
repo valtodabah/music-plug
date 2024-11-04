@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import multer from 'multer';
 import cloudinary from '@/lib/cloudinary';
-import connectToDatabase from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import { NextResponse } from 'next/server';
 
