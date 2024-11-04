@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, updateSession } from 'next-auth/react'
 import axios from 'axios'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator"
 import { PlusCircle, X, Upload, Trash2 } from 'lucide-react'
 
 export default function EditProfile() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const router = useRouter()
 
   const [formData, setFormData] = useState({
@@ -25,9 +25,10 @@ export default function EditProfile() {
     profilePicture: '',
     skills: [],
     portfolio: [],
-    socialMedia: [],
+    socialMedia: []
   })
   const [imageUrl, setImageUrl] = useState('')
+  const [imageLoaded, setImageLoaded] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
@@ -38,21 +39,30 @@ export default function EditProfile() {
     }
 
     if (status === 'authenticated' && session?.user) {
-      setFormData({
-        id: session.user.id,
-        name: session.user.name,
-        email: session.user.email,
-        bio: session.user.bio || '',
-        profilePicture: session.user.profilePicture || '',
-        skills: session.user.skills || [],
-        portfolio: session.user.portfolio || [],
-        socialMedia: session.user.socialMedia || [],
-      })
-      setImageUrl(session.user.profilePicture)
+      const fetchUserData = async () => {
+        try {
+          const response = await axios.get('/api/user/profile', {
+            params: {
+              id: session.user.id,
+            }
+          })
+          setFormData(response.data || {})
+
+          // Preload image
+          const img = new Image()
+          img.src = response.data.profilePicture
+          img.onload = () => setImageUrl(response.data.profilePicture || '')
+        } catch (error) {
+          console.error('Error fetching user data: ', error)
+          setError(error)
+        }
+      }
+
+      fetchUserData()
     }
   }, [status, session, router])
 
-  if (status === 'loading') {
+  if (status === 'loading' || !formData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-lg">Loading...</p>
@@ -78,8 +88,10 @@ export default function EditProfile() {
   }
 
   const handleRemoveSkill = (index) => {
-    const updatedSkills = formData.skills.filter((_, i) => i !== index)
-    setFormData((prev) => ({ ...prev, skills: updatedSkills }))
+    setFormData((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }))
   }
 
   const handleRemovePortfolioItem = (index) => {
@@ -137,10 +149,12 @@ export default function EditProfile() {
   }
 
   const handleAddSkill = () => {
-    setFormData((prev) => ({
-      ...prev,
-      skills: [...prev.skills, '']
-    }))
+    if (!formData.skills.includes('')) {
+      setFormData((prev) => ({
+        ...prev,
+        skills: [...prev.skills, '']
+      }))
+    }
   }
 
   const handleAddPortfolio = () => {
@@ -159,15 +173,32 @@ export default function EditProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    setError(null)
+    setSuccess(null)
+
+    // Validate form data
+    if (!formData.name || !formData.email) {
+      setError('Name and Email are required.')
+      return
+    }
+
     try {
-      await axios.patch('/api/user/profile', formData)
-      setSuccess('Profile updated successfully!')
-      setTimeout(() => {
-        router.push('/profile')
-      }, 2000)
+      const patch = await axios.patch('/api/user/profile', {
+        id: session.user.id,
+        ...formData
+      })
+
+      if (patch.status === 200) {
+        setSuccess('Profile updated successfully!')
+        update()
+        setTimeout(() => {
+          router.push('/profile')
+        }, 2000)
+      }
     } catch (err) {
-      console.error('Edit profile error: ', err.response.data)
-      setError('Error updating profile.')
+      console.error('Edit profile error: ', err.message)
+      setError('Error updating profile. Please try again.')
     }
   }
 
@@ -179,16 +210,6 @@ export default function EditProfile() {
           <CardDescription>Update your profile information</CardDescription>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert className="mb-4">
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
@@ -226,7 +247,13 @@ export default function EditProfile() {
               <Label>Profile Picture</Label>
               <div className="flex items-center space-x-4">
                 <Avatar className="w-20 h-20">
-                  <AvatarImage src={imageUrl || selectedImage} />
+                  {!imageLoaded && <div className="image-placeholder">Loading...</div>}
+                  <AvatarImage 
+                    src={imageUrl}
+                    alt={formData.name}
+                    onLoad={() => setImageLoaded(true)}
+                    style={{ display: imageLoaded ? 'block' : 'none' }}
+                  />
                   <AvatarFallback>{formData.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
@@ -349,6 +376,22 @@ export default function EditProfile() {
         <CardFooter>
           <Button type="submit" onClick={handleSubmit} className="w-full">Save Changes</Button>
         </CardFooter>
+        <div>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+          {success && (
+            <Alert className="mb-4">
+              <AlertDescription className="text-green-600 bg-green-100 border border-green-300 p-2 rounded">
+                {success}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
       </Card>
     </div>
   )
