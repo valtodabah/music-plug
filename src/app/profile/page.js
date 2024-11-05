@@ -28,6 +28,12 @@ export default function Profile() {
     description: '',
     tags: '',
   })
+  const [editingProjectId, setEditingProjectId] = useState(null)
+  const [editProjectData, setEditProjectData] = useState({
+    name: '',
+    description: '',
+    tags: '',
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -88,6 +94,39 @@ export default function Profile() {
 
   const handleProjectChange = (e) => {
     setNewProject({ ...newProject, [e.target.name]: e.target.value })
+  }
+
+  // Function to load project data into edit form
+  const startEditingProject = (project) => {
+    setEditingProjectId(project._id)
+    setEditProjectData({ name: project.name, description: project.description, tags: project.tags.join(', ') })
+  }
+
+  const handleEditProject = async (projectId) => {
+    try {
+      const response = await axios.put('/api/projects', {
+        id: projectId,
+        ...editProjectData,
+      })
+
+      // Update the projects list
+      setProjects(projects.map(project => project._id === projectId ? response.data : project))
+      setEditingProjectId(null) // Exit edit mode
+    } catch (error) {
+      console.error('Error updating project: ', error)
+    }
+  }
+
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await axios.delete(`/api/projects`, {
+        params: { id: projectId }
+      });
+      // Remove the project from the projects list
+      setProjects(projects.filter(project => project._id !== projectId))
+    } catch (error) {
+      console.error('Error deleting project: ', error)
+    }
   }
 
   const handleCreateProject = async () => {
@@ -213,12 +252,54 @@ export default function Profile() {
           {projects.length > 0 ? (
             projects.map((project) => (
               <div key={project._id} className="space-y-2 p-4 border rounded-md">
-                <h3 className="text-xl font-semibold">{project.name}</h3>
-                <p>{project.description}</p>
-                <p>Status: {project.status}</p>
-                <Link href={`/project/${project._id}/edit`} className="text-primary hover:underline">
-                  Edit Project
-                </Link>
+                {editingProjectId === project._id ? (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-3">Edit Project</h3>
+                    <p className="text-muted-foreground text-sm mb-1">Project Name</p>
+                    <Input
+                      name="name"
+                      placeholder="Project Name"
+                      value={editProjectData.name}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, name: e.target.value })}
+                      className="mb-2"
+                    />
+                    <p className="text-muted-foreground text-sm mb-1">Project Description</p>
+                    <Textarea
+                      name="description"
+                      placeholder="Project Description"
+                      value={editProjectData.description}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, description: e.target.value })}
+                      rows={4}
+                      className="mb-2"
+                    />
+                    <p className="text-muted-foreground text-sm mb-1">Tags (comma-separated)</p>
+                    <Input
+                      name="tags"
+                      placeholder="Tags (comma-separated)"
+                      value={editProjectData.tags}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, tags: e.target.value })}
+                      className="mb-2"
+                    />
+                    <Button onClick={() => handleEditProject(project._id, editProjectData)} className="mr-2">
+                      Save Changes
+                    </Button>
+                    <Button onClick={() => setEditingProjectId(null)}>
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="text-xl font-semibold">{project.name}</h3>
+                    <p>{project.description}</p>
+                    <p>Status: {project.status}</p>
+                    <Button onClick={() => startEditingProject(project)} className="mt-2">
+                      Edit Project
+                    </Button>
+                    <Button onClick={() => handleDeleteProject(project._id)} className="text-red-600 hover:underline ml-2">
+                      Delete Project
+                    </Button>
+                  </div>
+                )}
               </div>
             ))
           ) : (
