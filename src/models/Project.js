@@ -10,6 +10,7 @@ const ProjectSchema = new mongoose.Schema({
     applicants: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            skill: { type: String, required: true },
             message: { type: String, required: true },
             status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' }
         }

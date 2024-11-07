@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema({
     portfolio: {
         type: [{ name: String, link: String, description: String }], // Array of objects with name and link
     },
-    skills: [{ type: [String] }],
+    skills: { type: [String] },
     profilePicture: { type: String }, // URL to profile picture
     socialMedia: {
         type: [{ platform: String, username: String, link: String }], // Array of objects (social media accounts) with platform, username, and link
