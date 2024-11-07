@@ -37,7 +37,10 @@ export async function PATCH(req) {
         const { id, ...updates } = await req.json();
 
         await connectToDatabase();
-        const user = await User.findByIdAndUpdate(id, updates, { new: true });
+
+        const user = await User.findByIdAndUpdate(id, {$set: {
+                ...updates,
+            }}, { new: true });
         console.log('User found: ', id);
 
         if (!user)

@@ -1,11 +1,12 @@
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import multer from 'multer';
 import cloudinary from '@/lib/cloudinary';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import { NextResponse } from 'next/server';
 
-const upload = multer({ storage: multer.memoryStorage() });
+// const upload = multer({ storage: multer.memoryStorage() });
 
 export async function POST(req) {
     try {
@@ -17,13 +18,13 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
-        const file = await req.json();
-        const userId = session.user.id;
+        const { file, id } = await req.json();
+        // const userId = session.user.id;
 
         console.log("Received file: ", file);
-        console.log("Received userId: ", userId);
+        // console.log("Received userId: ", userId);
 
-        const uploadResponse = await cloudinary.uploader.upload(file.file, {
+        const uploadResponse = await cloudinary.uploader.upload(file, {
             folder: 'profile_pictures',
         });
 
@@ -31,7 +32,7 @@ export async function POST(req) {
 
         await connectToDatabase();
 
-        const user = await User.findById(userId);
+        const user = await User.findById(id);
 
         if (!user) {
             console.error('User not found');
