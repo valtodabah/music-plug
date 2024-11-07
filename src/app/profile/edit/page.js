@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession, updateSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import axios from 'axios'
+import Layout from '@/components/Layout'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -137,7 +138,10 @@ export default function EditProfile() {
   const handleImageUpload = async () => {
     if (selectedImage) {
       try {
-        const response = await axios.post('/api/user/profile-image', { file: selectedImage })
+        const response = await axios.post('/api/user/profile-image', {
+          id: session.user.id,
+          file: selectedImage
+        })
         setImageUrl(response.data.imageUrl)
         setFormData((prev) => ({ ...prev, profilePicture: response.data.imageUrl }))
         setSuccess('Image uploaded successfully!')
@@ -149,10 +153,10 @@ export default function EditProfile() {
   }
 
   const handleAddSkill = () => {
-    if (!formData.skills.includes('')) {
+    if (!formData.skills || !formData.skills.includes('')) {
       setFormData((prev) => ({
         ...prev,
-        skills: [...prev.skills, '']
+        skills: [...(prev.skills || []), '']
       }))
     }
   }
@@ -186,7 +190,7 @@ export default function EditProfile() {
     try {
       const patch = await axios.patch('/api/user/profile', {
         id: session.user.id,
-        ...formData
+        ...formData,
       })
 
       if (patch.status === 200) {
@@ -203,196 +207,198 @@ export default function EditProfile() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="max-w-3xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Edit Profile</CardTitle>
-          <CardDescription>Update your profile information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                rows={4}
-              />
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label>Profile Picture</Label>
-              <div className="flex items-center space-x-4">
-                <Avatar className="w-20 h-20">
-                  {!imageLoaded && <div className="image-placeholder">Loading...</div>}
-                  <AvatarImage 
-                    src={imageUrl}
-                    alt={formData.name}
-                    onLoad={() => setImageLoaded(true)}
-                    style={{ display: imageLoaded ? 'block' : 'none' }}
-                  />
-                  <AvatarFallback>{formData.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="space-y-2">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="w-full"
-                  />
-                  {selectedImage && (
-                    <Button onClick={handleImageUpload} className="w-full">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Profile Picture
-                    </Button>
-                  )}
-                  {imageUrl && (
-                    <Button onClick={handleRemoveProfileImage} variant="destructive" className="w-full">
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Remove Profile Picture
-                    </Button>
-                  )}
+    <Layout>
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Edit Profile</CardTitle>
+            <CardDescription>Update your profile information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  rows={4}
+                />
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Profile Picture</Label>
+                <div className="flex items-center space-x-4">
+                  <Avatar className="w-20 h-20">
+                    {!imageLoaded && <div className="image-placeholder"></div>}
+                    <AvatarImage 
+                      src={imageUrl}
+                      alt={formData.name}
+                      onLoad={() => setImageLoaded(true)}
+                      style={{ display: imageLoaded ? 'block' : 'none' }}
+                    />
+                    <AvatarFallback>{formData.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="w-full"
+                    />
+                    {selectedImage && (
+                      <Button onClick={handleImageUpload} className="w-full">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Profile Picture
+                      </Button>
+                    )}
+                    {imageUrl && (
+                      <Button onClick={handleRemoveProfileImage} variant="destructive" className="w-full">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove Profile Picture
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label>Skills</Label>
-              {formData.skills.map((skill, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <Input
-                    value={skill}
-                    onChange={(e) => handleSkillsChange(index, e.target.value)}
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => handleRemoveSkill(index)}
-                    variant="destructive"
-                    size="icon"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" onClick={handleAddSkill} variant="outline" className="w-full">
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Add Skill
-              </Button>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label>Portfolio</Label>
-              {formData.portfolio.map((project, index) => (
-                <div key={index} className="space-y-2 p-4 border rounded-md">
-                  <Input
-                    value={project.name}
-                    placeholder="Project Name"
-                    onChange={(e) => handlePortfolioChange(index, 'name', e.target.value)}
-                  />
-                  <Input
-                    value={project.link}
-                    placeholder="Project Link"
-                    onChange={(e) => handlePortfolioChange(index, 'link', e.target.value)}
-                  />
-                  <Textarea
-                    value={project.description}
-                    placeholder="Project Description"
-                    onChange={(e) => handlePortfolioChange(index, 'description', e.target.value)}
-                    rows={3}
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => handleRemovePortfolioItem(index)}
-                    variant="destructive"
-                  >
-                    Remove Project
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" onClick={handleAddPortfolio} variant="outline" className="w-full">
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Add Project
-              </Button>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label>Social Media</Label>
-              {formData.socialMedia.map((account, index) => (
-                <div key={index} className="space-y-2 p-4 border rounded-md">
-                  <Input
-                    value={account.platform}
-                    placeholder="Platform"
-                    onChange={(e) => handleSocialChange(index, 'platform', e.target.value)}
-                  />
-                  <Input
-                    value={account.username}
-                    placeholder="Username"
-                    onChange={(e) => handleSocialChange(index, 'username', e.target.value)}
-                  />
-                  <Input
-                    value={account.link}
-                    placeholder="Link"
-                    onChange={(e) => handleSocialChange(index, 'link', e.target.value)}
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => handleRemoveSocialMedia(index)}
-                    variant="destructive"
-                  >
-                    Remove Social Media
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" onClick={handleAddSocialMedia} variant="outline" className="w-full">
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Add Social Media
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" onClick={handleSubmit} className="w-full">Save Changes</Button>
-        </CardFooter>
-        <div>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>
-                {error}
-              </AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert className="mb-4">
-              <AlertDescription className="text-green-600 bg-green-100 border border-green-300 p-2 rounded">
-                {success}
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-      </Card>
-    </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Skills</Label>
+                {formData.skills?.map((skill, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Input
+                      value={skill}
+                      onChange={(e) => handleSkillsChange(index, e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => handleRemoveSkill(index)}
+                      variant="destructive"
+                      size="icon"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" onClick={handleAddSkill} variant="outline" className="w-full">
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Add Skill
+                </Button>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Portfolio</Label>
+                {formData.portfolio.map((project, index) => (
+                  <div key={index} className="space-y-2 p-4 border rounded-md">
+                    <Input
+                      value={project.name}
+                      placeholder="Project Name"
+                      onChange={(e) => handlePortfolioChange(index, 'name', e.target.value)}
+                    />
+                    <Input
+                      value={project.link}
+                      placeholder="Project Link"
+                      onChange={(e) => handlePortfolioChange(index, 'link', e.target.value)}
+                    />
+                    <Textarea
+                      value={project.description}
+                      placeholder="Project Description"
+                      onChange={(e) => handlePortfolioChange(index, 'description', e.target.value)}
+                      rows={3}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => handleRemovePortfolioItem(index)}
+                      variant="destructive"
+                    >
+                      Remove Project
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" onClick={handleAddPortfolio} variant="outline" className="w-full">
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Add Project
+                </Button>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Social Media</Label>
+                {formData.socialMedia.map((account, index) => (
+                  <div key={index} className="space-y-2 p-4 border rounded-md">
+                    <Input
+                      value={account.platform}
+                      placeholder="Platform"
+                      onChange={(e) => handleSocialChange(index, 'platform', e.target.value)}
+                    />
+                    <Input
+                      value={account.username}
+                      placeholder="Username"
+                      onChange={(e) => handleSocialChange(index, 'username', e.target.value)}
+                    />
+                    <Input
+                      value={account.link}
+                      placeholder="Link"
+                      onChange={(e) => handleSocialChange(index, 'link', e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => handleRemoveSocialMedia(index)}
+                      variant="destructive"
+                    >
+                      Remove Social Media
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" onClick={handleAddSocialMedia} variant="outline" className="w-full">
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Add Social Media
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" onClick={handleSubmit} className="w-full">Save Changes</Button>
+          </CardFooter>
+          <div>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert className="mb-4">
+                <AlertDescription className="text-green-600 bg-green-100 border border-green-300 p-2 rounded">
+                  {success}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </Card>
+      </div>
+    </Layout>
   )
 }
