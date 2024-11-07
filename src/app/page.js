@@ -11,8 +11,8 @@ export default function Home()
     { name: 'Carlos Garcia', skill: 'Photographer' }
   ];
   const projects = [
-    { title: 'Music Video Collaboration', status: 'In Progress' },
-    { title: 'Street Art Mural', status: 'Completed' },
+    { title: 'Music Video Collaboration', status: 'Open' },
+    { title: 'Street Art Mural', status: 'Closed' },
     { title: 'Photography Exhibition', status: 'Open' }
   ];
 
