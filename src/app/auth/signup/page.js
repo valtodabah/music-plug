@@ -26,10 +26,10 @@ export default function SignUp() {
     try {
       const response = await axios.post('/api/auth/signup', formData)
       console.log(response.data)
-      router.push('/auth/signin')
+      router.push('/profile')
     } catch (err) {
+      setError('Email already in use')
       console.error(err)
-      setError('Error signing up. Please try again.')
     }
   }
 
