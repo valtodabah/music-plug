@@ -5,7 +5,7 @@ export default function NavBar()
 {
     return (
         <header className="px-4 lg:px-6 h-14 flex items-center">
-        <Link className="flex items-center justify-center" href="#">
+        <Link className="flex items-center justify-center" href="/">
           <img src="/musicpluglogo.png" alt="Music Plug Logo" className="h-7 w-8" />
           <span className="sr-only">ArtistCollabHub</span>
         </Link>
@@ -16,7 +16,7 @@ export default function NavBar()
         </nav>
         <div className="flex items-center gap-4 ml-auto">
           <Bell className="h-5 w-5" />
-          <User className="h-5 w-5" />
+          <Link href="/profile"><User className="h-5 w-5" /></Link>
         </div>
       </header>
     );
