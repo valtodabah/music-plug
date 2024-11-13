@@ -21,8 +21,7 @@ export async function POST(req) {
         const { file, id } = await req.json();
         // const userId = session.user.id;
 
-        console.log("Received file: ", file);
-        // console.log("Received userId: ", userId);
+        console.log("Received file");
 
         const uploadResponse = await cloudinary.uploader.upload(file, {
             folder: 'profile_pictures',

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import axios from 'axios'
 import { Button } from "@/components/ui/button"
@@ -26,9 +27,20 @@ export default function SignUp() {
     try {
       const response = await axios.post('/api/auth/signup', formData)
       console.log(response.data)
-      router.push('/profile')
+
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: formData.email,
+        password: formData.password
+      });
+  
+      if (result.error) {
+        setError(result.error)
+      } else {
+        router.push('/profile')
+      }
     } catch (err) {
-      setError('Email already in use')
+      setError('Account already exists')
       console.error(err)
     }
   }

@@ -30,14 +30,6 @@ export async function GET(req) {
 
 export async function POST(req) {
     try {
-        /* const session = await getServerSession({ req, authOptions });
-
-        if (!session) {
-            return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-        }
-
-        console.log('Session: ', session); */
-
         const { owner, name, description, tags } = await req.json();
 
         if (!owner) {
