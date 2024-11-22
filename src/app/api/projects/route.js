@@ -19,8 +19,13 @@ export async function GET(req) {
         }
 
         // Fetch all projects from owner
-        const projects = await Project.find({ owner: ownerId });
-    
+        const projects = await Project.find({ owner: ownerId })
+            .populate('applicants.user', 'name email')
+            .populate('collaborators.user', 'name email')
+            .lean();
+        
+        console.log('Retrieved collaborators: ', projects[1].collaborators);
+
         return NextResponse.json(projects, { status: 200 });
     } catch (error) {
         console.error('Error fetching projects: ', error);
@@ -31,6 +36,7 @@ export async function GET(req) {
 export async function POST(req) {
     try {
         const { owner, name, description, tags } = await req.json();
+        console.log("Tags: ", tags);
 
         if (!owner) {
             throw new Error('User ID is missing from the request');
@@ -38,15 +44,19 @@ export async function POST(req) {
 
         await connectToDatabase();
 
+        const processedTags = Array.isArray(tags) 
+            ? tags.flat().filter(tag => tag !== null && tag !== undefined)
+            : tags.split(',').map(tag => tag.trim());
+
         const newProject = new Project({
             name,
             description,
             owner,
-            tags: tags.split(',').map(tag => tag.trim())
+            tags: processedTags
         });
 
         await newProject.save();
-    
+
         return NextResponse.json(newProject, { status: 201 });
     } catch (error) {
         console.error('Error creating project: ', error);
