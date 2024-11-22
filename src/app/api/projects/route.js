@@ -20,11 +20,11 @@ export async function GET(req) {
 
         // Fetch all projects from owner
         const projects = await Project.find({ owner: ownerId })
-            .populate('applicants.user', 'name email')
             .populate('collaborators.user', 'name email')
+            .populate('applicants.user', 'name email')
             .lean();
         
-        console.log('Retrieved collaborators: ', projects[1].collaborators);
+        console.log('Retrieved collaborators: ', projects[1]?.collaborators);
 
         return NextResponse.json(projects, { status: 200 });
     } catch (error) {

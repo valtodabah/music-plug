@@ -1,5 +1,6 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import Project from "@/models/Project";
+import mongoose from "mongoose";
 import { NextResponse } from 'next/server';
 
 export async function POST(req, { params }) {
@@ -31,11 +32,12 @@ export async function POST(req, { params }) {
 
         if (action === "accept") {
             project.collaborators.push({
-                user: applicant.Id,
+                user: mongoose.Types.ObjectId.createFromHexString(applicantId), // Ensure valid ObjectId using createFromHexString
                 skill,
             });
         }
 
+        // Remove applicant from project
         project.applicants = project.applicants.filter(
             (app) => app.user.toString() !== applicantId || app.skill !== skill
         );

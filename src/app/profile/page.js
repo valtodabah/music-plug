@@ -399,15 +399,15 @@ export default function Profile() {
                       </h3>
                       <p>{project.description}</p>
                       <h4 className="font-semibold">Collaborators:</h4>
-                        {project.collaborators.length > 0 ? (
-                            project.collaborators.map((collaborator) => (
+                      {project.collaborators.length > 0 ? (
+                          project.collaborators.map((collaborator) => (
                               <div key={collaborator.user?._id || collaborator.skill} className="flex items-center space-x-2">
                                   <p>{collaborator.user?.name || 'Unknown User'} ({collaborator.skill})</p>
                               </div>
-                            ))
-                        ) : (
-                            <p>No collaborators for this project.</p>
-                        )}
+                          ))
+                      ) : (
+                          <p>No collaborators for this project.</p>
+                      )}
                       <p>Status: {project.status}</p>
                       <h4 className="font-semibold">Applicants:</h4>
                       {project.applicants.length > 0 ? (
