@@ -10,25 +10,17 @@ export async function POST(req) {
         // Connect to the database
         await connectToDatabase();
 
-        // Check if user exists
+        // Find user
         const existingUser = await User.findOne({ email });
-        if (!existingUser)
-        {
-            return NextResponse.json({ error: 'User not found' }, { status: 400 });
-        }
 
-        // Compare passwords
-        const match = await bcrypt.compare(password, existingUser.password);
-        if (!match)
-        {
-            return NextResponse.json({ error: 'Invalid password' }, { status: 400 });
+        // Check if user exists and password matches
+        if (!existingUser || !(await bcrypt.compare(password, existingUser.password))) {
+            return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 });
         }
 
         // Return successful response
-        return NextResponse.json( { message: 'Sign in successful' }, { status: 200 });
-
-    }
-    catch (error) {
+        return NextResponse.json({ message: 'Sign in successful' }, { status: 200 });
+    } catch (error) {
         console.error(error);
         return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
     }
