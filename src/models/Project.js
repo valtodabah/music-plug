@@ -4,7 +4,12 @@ const ProjectSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    collaborators: [
+        {
+            user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            skill: { type: String },
+        }
+    ],
     tags: [{ type: [String], required: true }],
     status: { type: String, enum: ['open', 'closed'], default: 'open' },
     applicants: [
