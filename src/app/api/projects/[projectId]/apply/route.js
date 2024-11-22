@@ -1,38 +1,47 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import Project from "@/models/Project";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { NextResponse } from 'next/server';
 
 export async function POST(req, { params }) {
+    const { projectId } = params;
+    const { userId, skill, message } = await req.json();
+
+    if (!userId || !skill || !message) {
+        return NextResponse.json(
+            { error: "Missing required fields" },
+            { status: 400 }
+        );
+    }
+
     try {
-        const session = await getServerSession({ req, authOptions });
-
-        if (!session) {
-            return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-        }
-
-        const { projectId } = params;
-        const { message } = await req.json();
-
         await connectToDatabase();
-        const project = await Project.findById(params.projectId);
+
+        const project = await Project.findById(projectId);
 
         if (!project) {
-            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+            return NextResponse.json(
+                { error: "Project not found" },
+                { status: 404 }
+            );
         }
 
-        const applicant = {
-            user: session.user.id,
-            message
-        };
+        project.applicants.push({
+            user: userId,
+            skill,
+            message,
+        });
 
-        project.applicants.push(applicant);
         await project.save();
 
-        return NextResponse.json({ message: "Application submitted successfully" }, { status: 200 });
+        return NextResponse.json(
+            { message: "Application submitted successfully" },
+            { status: 201 }
+        );
     } catch (error) {
         console.error("Error applying to project: ", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+        return NextResponse.json(
+            { message: "Internal server error" },
+            { status: 500 }
+        );
     }
 }
