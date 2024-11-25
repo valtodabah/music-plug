@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectItem } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Music, Users, Star, Search } from 'lucide-react';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
@@ -17,6 +20,9 @@ export default function Dashboard() {
     const [selectedProject, setSelectedProject] = useState(null);
     const [applyMessage, setApplyMessage] = useState("");
     const [selectedSkill, setSelectedSkill] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         if (status === 'authenticated') {
@@ -52,7 +58,7 @@ export default function Dashboard() {
                 skill: selectedSkill,
                 message: applyMessage,
             });
-            alert("Application submitted successfully!");
+            setSuccessMessage("Application submitted successfully");
             // Add user to applicants list
             setProjects((prevProjects) =>
                 prevProjects.map((project) =>
@@ -76,96 +82,119 @@ export default function Dashboard() {
             setApplyMessage("");
         } catch (error) {
             console.error('Error applying to project: ', error);
-            alert("Error applying to project");
+            setErrorMessage("Error applying to project. Please try again later.");
         }
     };
+
+    const filteredProjects = projects.filter(project =>
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.tags.flat().some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
     return (
         <Layout>
           <div className="container mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-            <div className="space-y-4">
-            {projects.map((project) => {
-                const hasApplied = project.applicants.some(
-                    (applicant) => applicant.user._id === session.user.id
-                );
-
-                return (
-                    <Card key={project._id} className="border p-4">
-                        <CardHeader>
-                            <CardTitle className="text-xl">{project.name}</CardTitle>
-                            <p className="text-gray-500">{project.description}</p>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="font-semibold">Skills Needed:</p>
-                            <ul className="list-disc ml-5">
-                                {project.tags.map((tag, index) => (
-                                    tag.map((skillTag, tagIndex) => (
-                                        <li key={tagIndex}>{skillTag}</li>
-                                    ))
-                                ))}
-                            </ul>
-                            {!hasApplied ? (
-                                <Button
-                                    className="mt-4"
-                                    onClick={() => {
-                                        setSelectedProject(project);
-                                        setShowPopup(true);
-                                    }}
-                                >
-                                    Apply
-                                </Button>
-                            ) : (
-                                <p className="mt-4 text-green-600">You have applied</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                );
-            })}
-            </div>
-    
-            {showPopup && selectedProject && (
-              <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-                <div className="bg-white p-6 rounded-md w-full max-w-md">
-                  <h3 className="text-xl font-bold mb-4">
-                    Apply to {selectedProject.name}
-                  </h3>
-                  <Select
-                    value={selectedSkill}
-                    onChange={(e) => setSelectedSkill(e.target.value)}
-                    className="mb-4"
-                  >
-                    <option value="" disabled>
-                      Select a skill
-                    </option>
-                    {selectedProject.tags.map((tag) => (
-                        tag.map((skillTag, tagIndex) => (
-                            <SelectItem key={tagIndex} value={skillTag}>
-                                {skillTag}
-                            </SelectItem>
-                        ))
-                    ))}
-                  </Select>
-                  <Textarea
-                    placeholder="Write a message to the project owner"
-                    value={applyMessage}
-                    onChange={(e) => setApplyMessage(e.target.value)}
-                    className="mb-4"
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <Button onClick={() => setShowPopup(false)} variant="secondary">
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => handleApply(selectedProject._id)}
-                      variant="primary"
-                    >
-                      Submit Application
-                    </Button>
-                  </div>
-                </div>
+            <h1 className="text-3xl font-bold mb-8 text-center">Discover Collaboration Opportunities</h1>
+            <div className="mb-6">
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  placeholder="Search projects..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
-            )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map((project) => {
+                const hasApplied = project.applicants.some(
+                  (applicant) => applicant.user._id === session.user.id
+                )
+    
+                return (
+                  <Card key={project._id} className="bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-lg transition-shadow duration-300">
+                    <CardHeader>
+                      <CardTitle className="text-xl flex items-center">
+                        <Music className="w-5 h-5 mr-2 text-purple-500" />
+                        {project.name}
+                      </CardTitle>
+                      <CardDescription>{project.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-4">
+                        <h4 className="font-semibold mb-2 flex items-center">
+                          <Star className="w-4 h-4 mr-2 text-yellow-500" />
+                          Skills Needed:
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {project.tags.flat().map((skillTag, tagIndex) => (
+                            <Badge key={tagIndex} variant="secondary">
+                              {skillTag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          {/* <Avatar className="w-8 h-8 mr-2">
+                            {project.owner.profilePicture && (
+                                <AvatarImage src={project.owner.profilePicture} />
+                            )}
+                            {project.owner.name[0] && (
+                                <AvatarFallback>{project.owner.name[0]}</AvatarFallback>
+                            )}
+                          </Avatar> */}
+                          <span className="text-sm text-muted-foreground">{project.owner.name}</span>
+                        </div>
+                        {!hasApplied ? (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button>Apply Now</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Apply to {project.name}</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4 mt-4">
+                                <Select onValueChange={setSelectedSkill}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select your skill" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {project.tags.flat().map((tag, index) => (
+                                      <SelectItem key={index} value={tag}>{tag}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Textarea
+                                  placeholder="Write a message to the project owner"
+                                  value={applyMessage}
+                                  onChange={(e) => setApplyMessage(e.target.value)}
+                                />
+                                <Button onClick={() => handleApply(project._id)} className="w-full">
+                                  Submit Application
+                                </Button>
+                                {errorMessage && (
+                                  <p className="text-red-500 text-sm">{errorMessage}</p>
+                                )}
+                                {successMessage && (
+                                  <p className="text-green-500 text-sm">{successMessage}</p>
+                                )}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        ) : (
+                          <Badge variant="outline" className="bg-green-100">Applied</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
           </div>
         </Layout>
       );

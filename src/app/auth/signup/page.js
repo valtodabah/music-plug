@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { UserIcon, MailIcon, LockIcon } from 'lucide-react'
+import { UserIcon, MailIcon, LockIcon, ArrowRight } from 'lucide-react'
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -37,7 +37,7 @@ export default function SignUp() {
       if (result.error) {
         setError(result.error)
       } else {
-        router.push('/profile')
+        router.push('/profile/edit')
       }
     } catch (err) {
       setError('Account already exists')
@@ -54,11 +54,11 @@ export default function SignUp() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200">
+      <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm shadow-xl">
+        <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
-          <CardDescription className="text-center">Sign up to get started with our service</CardDescription>
+          <CardDescription className="text-center">Sign up to start your creative journey</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
@@ -115,13 +115,16 @@ export default function SignUp() {
                 <LockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               </div>
             </div>
-            <Button type="submit" className="w-full">Sign Up</Button>
+            <Button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white">
+              Sign Up
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <Link href="/auth/signin" className="font-medium text-primary hover:underline">
+            <Link href="/auth/signin" className="font-medium text-purple-600 hover:text-purple-500 hover:underline">
               Sign In
             </Link>
           </p>

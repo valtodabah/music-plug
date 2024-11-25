@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LockIcon, MailIcon } from 'lucide-react';
+import { LockIcon, MailIcon, ArrowRight } from 'lucide-react';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -37,16 +37,16 @@ export default function SignIn() {
     if (result.error) {
       setError(result.error)
     } else {
-      router.push('/profile')
+      router.push('/dashboard')
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
-          <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200">
+      <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm shadow-xl">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
+          <CardDescription className="text-center">Sign in to continue your creative journey</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
@@ -87,13 +87,16 @@ export default function SignIn() {
                 <LockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               </div>
             </div>
-            <Button type="submit" className="w-full">Sign In</Button>
+            <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white">
+              Sign In
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-600">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" className="font-medium text-primary hover:underline">
+            <Link href="/auth/signup" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline">
               Sign Up
             </Link>
           </p>
