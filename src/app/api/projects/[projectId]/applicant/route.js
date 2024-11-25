@@ -32,7 +32,7 @@ export async function POST(req, { params }) {
 
         if (action === "accept") {
             project.collaborators.push({
-                user: mongoose.Types.ObjectId.createFromHexString(applicantId), // Ensure valid ObjectId using createFromHexString
+                user: applicantId, // Ensure valid ObjectId using createFromHexString
                 skill,
             });
         }
