@@ -19,7 +19,9 @@ export async function GET(req) {
         }
 
         // Fetch all projects from owner
+        // Populate name, email and id of collaborators and applicants
         const projects = await Project.find({ owner: ownerId })
+            .populate('owner', 'name email')
             .populate('collaborators.user', 'name email')
             .populate('applicants.user', 'name email')
             .lean();

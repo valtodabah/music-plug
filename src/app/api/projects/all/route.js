@@ -17,6 +17,8 @@ export async function GET(req) {
         }
 
         const projects = await Project.find({ owner: { $ne: ownerId }, status: 'open' })
+            .populate('owner', 'name email')
+            .populate('collaborators.user', 'name email')
             .populate('applicants.user', 'name email')
             .lean();
     
