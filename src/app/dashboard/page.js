@@ -27,25 +27,46 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (status === 'authenticated') {
-            fetchProjects();
+          const fetchProjects = async () => {
+            try {
+              const response = await axios.get(`/api/projects/all`, {
+                  params: {
+                      owner: session.user.id,
+                  },
+              });
+              const userProjects = response.data.filter(
+                  project => project.owner !== session.user.id
+              );
+              setProjects(userProjects);
+            } catch (error) {
+                console.error('Error fetching projects: ', error);
+            }
+          };
+          fetchProjects();
         }
     }, [status]);
 
-    const fetchProjects = async () => {
-        try {
-            const response = await axios.get(`/api/projects/all`, {
-                params: {
-                    owner: session.user.id,
-                },
-            });
-            const userProjects = response.data.filter(
-                project => project.owner !== session.user.id
-            );
-            setProjects(userProjects);
-        } catch (error) {
-            console.error('Error fetching projects: ', error);
-        }
-    };
+    if (status === 'loading') {
+      // Do nothing while loading
+      return null;
+    }
+
+    if (status !== 'authenticated') {
+      // Not authenticated
+      return (
+        <Layout>
+          <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl font-bold mb-8 text-center">Discover Collaboration Opportunities</h1>
+            <p className="text-center text-lg">Sign in to view and apply to projects!</p>
+            <div className="flex justify-center mt-4">
+              <Link href="/auth/signin" className="text-center text-blue-500">
+                Sign In
+              </Link>
+            </div>
+          </div>
+        </Layout>
+      );
+    }
 
     const handleApply = async (projectId) => {
         if (!selectedSkill || !applyMessage) {
