@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import Layout from '@/components/Layout';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,15 +140,22 @@ export default function Dashboard() {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          {/* <Avatar className="w-8 h-8 mr-2">
-                            {project.owner.profilePicture && (
-                                <AvatarImage src={project.owner.profilePicture} />
-                            )}
-                            {project.owner.name[0] && (
-                                <AvatarFallback>{project.owner.name[0]}</AvatarFallback>
-                            )}
-                          </Avatar> */}
-                          <span className="text-sm text-muted-foreground">{project.owner.name}</span>
+                          <span className="text-sm font-semibold">Owner:
+                            <p className="text-sm text-muted-foreground">
+                              <Link href={`/user?id=${project.owner._id}`}>{project.owner.name}</Link>
+                            </p>
+                          </span>
+                          <span className="text-sm font semibold ml-7">Collaborators:
+                              {project.collaborators.length > 0 ? (
+                                project.collaborators.map((collaborator, index) => (
+                                  <p className="text-sm text-muted-foreground">
+                                    <Link href={`/user?id=${collaborator.user._id}`} className="text-sm text-muted-foreground" key={index}>{collaborator.user.name}</Link>
+                                  </p>
+                                ))
+                              ) : (
+                                <p className="text-sm text-muted-foreground">None</p>
+                              )}
+                          </span>
                         </div>
                         {!hasApplied ? (
                           <Dialog>

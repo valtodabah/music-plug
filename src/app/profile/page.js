@@ -69,7 +69,19 @@ export default function Profile() {
               owner: session.user.id,
             },
           })
-          setProjects(response.data || [])
+
+          const collab = await axios.get(`/api/projects/all`, {
+            params: {
+                owner: session.user.id,
+            },
+          })
+          const userProjects = collab.data.filter(
+              project => project.collaborators.some(collaborator => collaborator.user._id === session.user.id)
+          )
+
+          setProjects([...response.data, ...userProjects])
+          
+
           setLoading(false)
         } catch (error) {
           console.error('Error fetching projects: ', error)
@@ -387,12 +399,23 @@ export default function Profile() {
                       </div>
                     ) : (
                       <div className="space-y-4">
+                        <h4 className="font-semibold">Owner:</h4>
+                        {project.owner._id === session.user.id ? (
+                          <div className="flex items-center space-x-2">
+                            <p href={`/user?id=${project.owner._id}`}>{project.owner.name}</p>
+                            <span className="text-muted-foreground">(You)</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <Link href={`/user?id=${project.owner._id}`}>{project.owner.name}</Link>
+                          </div>
+                        )}
+
                         <h4 className="font-semibold">Collaborators:</h4>
-                        {project.collaborators.length >
-0 ? (
+                        {project.collaborators.length > 0 ? (
                           project.collaborators.map((collaborator) => (
                             <div key={collaborator.user?._id || collaborator.skill} className="flex items-center space-x-2">
-                              <p>{collaborator.user?.name || 'Unknown User'} ({collaborator.skill})</p>
+                              <Link href={`/user?id=${collaborator.user._id}`}>{collaborator.user?.name || 'Unknown User'} ({collaborator.skill})</Link>
                             </div>
                           ))
                         ) : (
@@ -404,7 +427,7 @@ export default function Profile() {
                           project.applicants.map((applicant) => (
                             <div key={applicant.user} className="flex items-center justify-between border-b py-2">
                               <div>
-                                <p className="font-semibold">{applicant.user.name}</p>
+                                <Link href={`/user?id=${applicant.user._id}`} className="font-semibold">{applicant.user.name}</Link>
                                 <p className="text-sm text-gray-600">{applicant.skill}</p>
                                 <p className="text-sm text-gray-400">{applicant.message}</p>
                               </div>
