@@ -1,4 +1,3 @@
-import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
 import Project from "@/models/Project";
 import { NextResponse } from 'next/server';
@@ -7,8 +6,7 @@ export async function GET(req) {
     try {
         await connectToDatabase();
 
-        const url = new URL(req.url);
-        const ownerId = url.searchParams.get('owner');
+        const ownerId = req.nextUrl.searchParams.get('owner');
 
         console.log('Owner ID: ', ownerId);
 
