@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import Layout from '@/components/Layout';
 import Link from 'next/link'
@@ -15,34 +14,26 @@ import { ExternalLink, Mail, Music, Users, Star, Briefcase } from 'lucide-react'
 
 
 export default function Profile() {
-  const { data: session, status } = useSession()
-  const [user, setUser] = useState(null)
   const [imageUrl, setImageUrl] = useState('')
   const [imageLoaded, setImageLoaded] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const userId = searchParams.get('id')
+  const [user, setUser] = useState(null)
   const [projects, setProjects] = useState([])
-  const [newProject, setNewProject] = useState({
-    name: '',
-    description: '',
-    tags: '',
-  })
-  const [editProjectData, setEditProjectData] = useState({
-    name: '',
-    description: '',
-    tags: '',
-  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-    }
-    if (status === 'authenticated') {
+      if (!userId) {
+        router.push('/dashboard')
+        return
+      }
+
       const fetchUserData = async () => {
         try {
           const response = await axios.get('/api/user/profile', {
             params: {
-              id: session.user.id,
+              id: userId,
             }
           })
 
@@ -61,17 +52,17 @@ export default function Profile() {
         try {
           const response = await axios.get('/api/projects', {
             params: {
-              owner: session.user.id,
+              owner: userId,
             },
           })
 
           const collab = await axios.get(`/api/projects/all`, {
             params: {
-                owner: session.user.id,
+                owner: userId,
             },
           })
           const userProjects = collab.data.filter(
-              project => project.collaborators.some(collaborator => collaborator.user._id === session.user.id)
+              project => project.collaborators.some(collaborator => collaborator.user._id === userId)
           )
 
           setProjects([...response.data, ...userProjects])
@@ -86,21 +77,12 @@ export default function Profile() {
 
       fetchUserData()
       fetchUserProjects()
-    }
-  }, [status, router, session])
+  }, [userId])
 
-  if (status === 'loading' || !user) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-lg">Loading...</p>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">Loading projects...</p>
       </div>
     )
   }

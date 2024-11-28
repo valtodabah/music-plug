@@ -26,7 +26,7 @@ export default function Dashboard() {
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
-        if (status === 'authenticated') {
+        if (status === 'authenticated' && session?.user?.id) {
           const fetchProjects = async () => {
             try {
               const response = await axios.get(`/api/projects/all`, {
@@ -44,7 +44,7 @@ export default function Dashboard() {
           };
           fetchProjects();
         }
-    }, [status]);
+    }, [status, session?.user?.id]);
 
     if (status === 'loading') {
       // Do nothing while loading
@@ -66,6 +66,10 @@ export default function Dashboard() {
           </div>
         </Layout>
       );
+    }
+
+    if (!projects) {
+      return <p>Loading...</p>
     }
 
     const handleApply = async (projectId) => {
@@ -131,7 +135,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => {
+              {filteredProjects.map((project, index) => {
                 const hasApplied = project.applicants.some(
                   (applicant) => applicant.user._id === session.user.id
                 )
@@ -163,14 +167,14 @@ export default function Dashboard() {
                         <div className="flex items-center">
                           <span className="text-sm font-semibold">Owner:
                             <p className="text-sm text-muted-foreground">
-                              <Link href={`/user?id=${project.owner._id}`}>{project.owner.name}</Link>
+                              <Link key={index} href={`/user?id=${project.owner._id}`}>{project.owner.name}</Link>
                             </p>
                           </span>
                           <span className="text-sm font semibold ml-7">Collaborators:
                               {project.collaborators.length > 0 ? (
-                                project.collaborators.map((collaborator, index) => (
-                                  <p className="text-sm text-muted-foreground">
-                                    <Link href={`/user?id=${collaborator.user._id}`} className="text-sm text-muted-foreground" key={index}>{collaborator.user.name}</Link>
+                                project.collaborators.map((collaborator, index2) => (
+                                  <p className="text-sm text-muted-foreground" key={index}>
+                                    <Link href={`/user?id=${collaborator.user._id}`} className="text-sm text-muted-foreground" key={index2}>{collaborator.user.name}</Link>
                                   </p>
                                 ))
                               ) : (
