@@ -6,7 +6,8 @@ export async function GET(req) {
     try {
         await connectToDatabase();
 
-        const ownerId = req.nextUrl.searchParams.get('owner');
+        const { searchParams } = req.nextUrl;
+        const ownerId = searchParams.get('owner');
 
         console.log('Owner ID: ', ownerId);
 
