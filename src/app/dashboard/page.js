@@ -29,11 +29,11 @@ export default function Dashboard() {
         if (status === 'authenticated' && session?.user?.id) {
           const fetchProjects = async () => {
             try {
-              const response = await axios.get(`/api/projects/all?owner=${session.user.id}`);
-              const userProjects = response.data.filter(
-                  project => project.owner !== session.user.id
+              const response = await axios.get("/api/projects/all");
+              const filteredProjects = response.data.filter(
+                  project => project.owner._id !== session.user.id
               );
-              setProjects(userProjects);
+              setProjects(filteredProjects);
             } catch (error) {
                 console.error('Error fetching projects: ', error);
             }
