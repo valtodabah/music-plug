@@ -70,12 +70,12 @@ export default function Profile() {
             },
           })
 
-          const collab = await axios.get(`/api/projects/all?owner=${session.user.id}`)
-          const userProjects = collab.data.filter(
-              project => project.collaborators.some(collaborator => collaborator.user._id === session.user.id)
-          )
+          const collab = await axios.get(`/api/projects/all`)
+          const filteredProjects = collab.data.filter(
+            project => project.owner._id !== session.user.id && project.collaborators.some(collab => collab.user._id === session.user.id),
+          );
 
-          setProjects([...response.data, ...userProjects])
+          setProjects([...response.data, ...filteredProjects])
           
 
           setLoading(false)
